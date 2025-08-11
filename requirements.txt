@@ -6,3 +6,4 @@ shapely
 fiona
 rtree
 openpyxl
+xlrd
