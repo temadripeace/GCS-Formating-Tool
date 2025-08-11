@@ -1,5 +1,3 @@
-streamlit
-pandas
-geopandas
-shapely
-openpyxl
+gdal-bin
+libgdal-dev
+libspatialindex-dev
