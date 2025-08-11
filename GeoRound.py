@@ -10,10 +10,7 @@ from io import BytesIO
 
 col1, col2, col3= st.columns([1, 3, 1])  # Left, Center, Right columns
 with col2:
-    st.image(
-        r"C:/Users/PMD/OneDrive - sucafina.com/Desktop/Sucafina/03_Python Scripts/Streamlit/Sucafina Logo.jpg",
-        width=500  # Adjust for desired logo size
-    )
+    st.image("Sucafina Logo.jpg", width=200)
 
 st.markdown("<h3 style='text-align: center;'>Geographic Coordinate Formarting Tool - 6DP</h3>", unsafe_allow_html=True)
 
@@ -221,3 +218,4 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error loading file: {e}")
+
