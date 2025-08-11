@@ -98,28 +98,37 @@ def process_wkt(wkt_string):
 
 # ----------------------------------------Convert to GeoDataFrame ----------------------------------------
 def convert_to_geodf(df):
-    wkt_candidates = [col for col in df.columns if col.lower() in [
+    wkt_columns = [col for col in df.columns if col.lower() in [
         "gps_point", "gps_polygon", "plot_gps_point", "plot_gps_polygon", "plot_wkt", "wkt", "geometry"
     ]]
-    if wkt_candidates:
-        wkt_col = wkt_candidates[0]
+    
+    # Try WKT columns one by one
+    for wkt_col in wkt_columns:
         try:
-            df[wkt_col] = df[wkt_col].apply(lambda x: wkt.loads(str(x)) if pd.notnull(x) else None)
-            return gpd.GeoDataFrame(df, geometry=wkt_col, crs="EPSG:4326")
+            # Attempt to parse WKT only where values are non-null/non-empty
+            parsed = df[wkt_col].apply(lambda x: wkt.loads(str(x)) if pd.notnull(x) and str(x).strip() != '' else None)
+            # Check if at least one valid geometry parsed
+            if parsed.notnull().any():
+                df[wkt_col] = parsed
+                return gpd.GeoDataFrame(df, geometry=wkt_col, crs="EPSG:4326")
         except Exception as e:
-            st.warning(f"⚠ WKT column found but could not be parsed: {e}")
-    return df
+            # Log or show warning but keep trying other columns
+            st.warning(f"⚠ Could not parse WKT column '{wkt_col}': {e}")
+            continue
 
+    # If no WKT columns succeeded, try lat/lon columns
     lon_candidates = [col for col in df.columns if "lon" in col.lower()]
     lat_candidates = [col for col in df.columns if "lat" in col.lower()]
     if lon_candidates and lat_candidates:
         lon_col = lon_candidates[0]
         lat_col = lat_candidates[0]
-        # Create geometry from lon/lat without dropping original columns
-        geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
-        return gpd.GeoDataFrame(df.copy(), geometry=geometry, crs="EPSG:4326")
+        try:
+            geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
+            return gpd.GeoDataFrame(df.copy(), geometry=geometry, crs="EPSG:4326")
+        except Exception as e:
+            st.warning(f"⚠ Could not create geometry from lat/lon: {e}")
 
-    st.warning("⚠ No geometry information found (WKT or Lat/Lon). GeoJSON/KML export may not work.")
+    st.warning("⚠ No valid geometry found (WKT or Lat/Lon). GeoJSON/KML export may not work.")
     return df
 
 
