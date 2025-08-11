@@ -7,20 +7,17 @@ from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 from io import BytesIO
 
 
-
-col1, col2, col3= st.columns([1, 3, 1])  # Left, Center, Right columns
+col1, col2, col3 = st.columns([1, 3, 1])  # Left, Center, Right columns
 with col2:
     st.image("Sucafina Logo.jpg", width=500)
 
-st.markdown("<h3 style='text-align: center;'>Geographic Coordinate Formarting Tool - 6DP</h3>", unsafe_allow_html=True)
-
-
+st.markdown("<h3 style='text-align: center;'>Geographic Coordinate Formatting Tool - 6DP</h3>", unsafe_allow_html=True)
 
 # ------------------ App Description ------------------
 st.markdown(
     """
     <div style="text-align: justify; font-size: 16px;">
-        This tool formarts plot coordinates to <b>six decimal places</b> in compliance with <b>EUDR requirements</b>.
+        This tool formats plot coordinates to <b>six decimal places</b> in compliance with <b>EUDR requirements</b>.
         It supports importing files in <b>CSV</b>, <b>Excel</b>, or <b>GeoJSON</b> format.
         <br><br>
         <b>Required column names:</b>
@@ -32,26 +29,34 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-# ------------------ Streamlit Page Setup ------------------
+
+# ------------------------------------- Streamlit Page Setup ---------------------------------------------
 st.set_page_config(page_title="File Viewer", layout="centered")
 
 st.markdown("<h3 style='text-align: left;'>📂 Upload Geospatial Data</h3>", unsafe_allow_html=True)
 
-# ------------------ Coordinate Processing Functions ------------------
+# ------------------ -----------Coordinate Processing Functions ------------------------------------------
 def format_coord(value):
-    s = str(value)
-    if '.' in s:
-        integer, decimal = s.split('.')
-        if len(decimal) > 6:
-            return f"{round(float(s), 6):.6f}"
-        elif len(decimal) < 6:
-            padding = '0' * (5 - len(decimal)) + '1'
-            new_decimal = decimal + padding
-            return f"{integer}.{new_decimal}"
+    try:
+        s = str(value)
+        if '.' in s:
+            integer, decimal = s.split('.')
+            if len(decimal) > 6:
+                # Round to 6 decimals
+                return f"{round(float(s), 6):.6f}"
+            elif len(decimal) < 6:
+                # Pad zeros so length before adding 1 is 5 decimals
+                zeros_needed = 5 - len(decimal)
+                padding = '0' * zeros_needed
+                new_decimal = decimal + padding + '1'  # Add 1 as the 6th decimal digit
+                return f"{integer}.{new_decimal}"
+            else:
+                return f"{float(s):.6f}"
         else:
-            return f"{float(s):.6f}"
-    else:
-        return f"{s}.000001"
+            # No decimal, add 000001
+            return f"{s}.000001"
+    except Exception:
+        return value
 
 def apply_n_times(func, value, n):
     for _ in range(n):
@@ -59,7 +64,7 @@ def apply_n_times(func, value, n):
     return value
 
 def process_coords(coords):
-    return [(float(format_coord(x)), float(format_coord(y))) for x, y in coords]
+    return [(float(format_coord(lon_col)), float(format_coord(lat_col))) for lon_col, lat_col in coords]
 
 def process_polygon(polygon):
     exterior = process_coords(polygon.exterior.coords)
@@ -87,32 +92,39 @@ def process_wkt(wkt_string):
     except:
         return wkt_string
 
-# ------------------ Convert to GeoDataFrame ------------------
+
+
+
+
+# ----------------------------------------Convert to GeoDataFrame ----------------------------------------
 def convert_to_geodf(df):
-    wkt_candidates = [col for col in df.columns if col.lower() in ["gps_point", "gps_polygon", "plot_gps_point", "plot_gps_polygon", "plot_wkt", "WKT", "geometry"]]
+    wkt_candidates = [col for col in df.columns if col.lower() in [
+        "gps_point", "gps_polygon", "plot_gps_point", "plot_gps_polygon", "plot_wkt", "wkt", "geometry"
+    ]]
     if wkt_candidates:
         wkt_col = wkt_candidates[0]
         try:
-            df["geometry"] = df[wkt_col].apply(lambda x: wkt.loads(str(x)) if pd.notnull(x) else None)
-            return gpd.GeoDataFrame(df, geometry="geometry", crs="EPSG:4326")
+            df[wkt_col] = df[wkt_col].apply(lambda x: wkt.loads(str(x)) if pd.notnull(x) else None)
+            return gpd.GeoDataFrame(df, geometry=wkt_col, crs="EPSG:4326")
         except Exception as e:
             st.warning(f"⚠ WKT column found but could not be parsed: {e}")
+    return df
 
     lon_candidates = [col for col in df.columns if "lon" in col.lower()]
     lat_candidates = [col for col in df.columns if "lat" in col.lower()]
     if lon_candidates and lat_candidates:
         lon_col = lon_candidates[0]
         lat_col = lat_candidates[0]
-        return gpd.GeoDataFrame(
-            df,
-            geometry=gpd.points_from_xy(df[lon_col], df[lat_col]),
-            crs="EPSG:4326"
-        )
+        # Create geometry from lon/lat without dropping original columns
+        geometry = gpd.points_from_xy(df[lon_col], df[lat_col])
+        return gpd.GeoDataFrame(df.copy(), geometry=geometry, crs="EPSG:4326")
 
     st.warning("⚠ No geometry information found (WKT or Lat/Lon). GeoJSON/KML export may not work.")
     return df
 
-# ------------------ File Processing ------------------
+
+
+# ------------------ ---------------------File Processing -------------------------------------------------
 uploaded_file = st.file_uploader(
     "Upload CSV, Excel, or GeoJSON",
     type=["csv", "xlsx", "xls", "geojson", "json"]
@@ -136,35 +148,35 @@ if uploaded_file:
             st.error("❌ Unsupported file format")
             st.stop()
 
-        # Step 2: Process coordinate/WKT columns before GeoDataFrame conversion
-        columns_to_process = [
-            'plot_longitude',
-            'plot_latitude',
-            'longitute',
-            'latitute',
-            'long',
-            'lat',
-            'plot_gps_point',
-            'plot_gps_polygon',
-            'gps_point',
-            'gps_polygon',
-            'plot_wkt',
-            'WKT',
-            'geometry'
-        ]
+        # Step 2: Format lat/lon columns
+        lat_lon_cols = ['plot_longitude', 'plot_latitude', 'longitute', 'latitute', 'long', 'lat']
+        for col in lat_lon_cols:
+            if col in Data.columns:
+                Data[col] = Data[col].apply(lambda x: format_coord(x) if pd.notnull(x) else x)
+                # Convert back to float
+                try:
+                    Data[col] = Data[col].astype(float)
+                except:
+                    pass
 
-        for col in columns_to_process:
+        # Step 3: Format WKT columns
+        wkt_cols = ['plot_gps_point', 'plot_gps_polygon', 'gps_point', 'gps_polygon', 'plot_wkt', 'WKT', 'geometry']
+        for col in wkt_cols:
             if col in Data.columns:
                 Data[col] = Data[col].apply(lambda x: apply_n_times(process_wkt, x, 2) if pd.notnull(x) else x)
 
-        # Step 3: Convert to GeoDataFrame after formatting
+        # Step 4: Convert to GeoDataFrame
         Data = convert_to_geodf(Data)
 
-        # Step 4: Display processed data
+        # Step 5: Display processed data
         st.markdown("<h3 style='text-align: left;'>Processed Data Table</h3>", unsafe_allow_html=True)
         st.dataframe(Data)
 
-        # ------------------ Download Section ------------------
+
+
+
+
+        # ------------------ ---------------------------------Download Section -------------------------------------
         st.markdown("<h3 style='text-align: left;'> 🡇 Download Processed Data</h3>", unsafe_allow_html=True)
         format_choice = st.selectbox(
             "Select file format to download:",
@@ -207,7 +219,7 @@ if uploaded_file:
             else:
                 st.error("❌ Data is not a GeoDataFrame. Cannot export as KML.")
 
-        # Step 5: Download button
+        # Step 6: Download button
         if file_data:
             st.download_button(
                 label=f"⬇ Download {format_choice}",
@@ -218,5 +230,3 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error loading file: {e}")
-
-
