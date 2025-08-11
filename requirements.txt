@@ -1,8 +1,8 @@
 streamlit
 pandas
 numpy
-geopandas==0.14.3
-shapely==2.0.2
-fiona==1.9.5
-rtree==1.0.1
+geopandas
+shapely
+fiona
+rtree
 openpyxl
