@@ -1,6 +1,3 @@
-
-sudo apt-get update
-sudo apt --fix-broken install
 gdal-bin
 libgdal-dev
 libspatialindex-dev
