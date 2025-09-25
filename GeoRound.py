@@ -1,11 +1,13 @@
 import streamlit as st
-import pyodbc
 import pandas as pd
 import geopandas as gpd
 import os
 from shapely import wkt
 from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 from io import BytesIO
+import pkg_resources
+installed_packages = [p.key for p in pkg_resources.working_set]
+
 
 
 col1, col2, col3 = st.columns([1, 3, 1])  # Left, Center, Right columns
@@ -240,4 +242,5 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error loading file: {e}")
+
 
