@@ -7,3 +7,5 @@ fiona
 rtree
 openpyxl
 xlrd
+rasterio
+pyodb
