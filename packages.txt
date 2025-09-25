@@ -4,3 +4,4 @@ libodbc1
 gdal-bin
 libgdal-dev
 libspatialindex-dev
+apt --fix-broken install
