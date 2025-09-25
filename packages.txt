@@ -1,6 +1,5 @@
 unixodbc
 unixodbc-dev
-libodbc1
 gdal-bin
 libgdal-dev
 libspatialindex-dev
