@@ -1,5 +1,6 @@
 streamlit
 pandas
+pyodbc
 numpy
 geopandas
 shapely
