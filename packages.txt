@@ -1,4 +1,2 @@
-libgdal-dev
 gdal-bin
-libodbc2
-libodbcinst2
+libgdal-dev
