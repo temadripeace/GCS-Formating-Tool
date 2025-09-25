@@ -1,3 +1,5 @@
 gdal-bin
 libgdal-dev
 libspatialindex-dev
+libodbc2
+libodbcinst2
