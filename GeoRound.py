@@ -158,7 +158,7 @@ if uploaded_file:
             st.stop()
 
         # Step 2: Format lat/lon columns
-        lat_lon_cols = ['plot_longitude', 'plot_latitude', 'longitute', 'latitute', 'long', 'lat']
+        lat_lon_cols = ['plot_longitude', 'plot_latitude', 'longitute', 'latitute', 'log', 'lat']
         for col in lat_lon_cols:
             if col in Data.columns:
                 Data[col] = Data[col].apply(lambda x: format_coord(x) if pd.notnull(x) else x)
@@ -169,7 +169,7 @@ if uploaded_file:
                     pass
 
         # Step 3: Format WKT columns
-        wkt_cols = ['plot_gps_point', 'plot_gps_polygon', 'gps_point', 'gps_polygon', 'plot_wkt', 'wkt', 'WKT', 'geometry', 'Geometry', 'GEOMETRY']
+        wkt_cols = ['plot_gps_point', 'plot_gps_polygon', 'gps_point', 'gps_polygon', 'plot_wkt', 'WKT','wkt', 'geometry', 'Geometry', 'GEOMETRY' ]
         for col in wkt_cols:
             if col in Data.columns:
                 Data[col] = Data[col].apply(lambda x: apply_n_times(process_wkt, x, 2) if pd.notnull(x) else x)
@@ -239,4 +239,3 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error loading file: {e}")
-
