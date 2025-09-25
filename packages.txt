@@ -1,5 +1,6 @@
-libodbc2=2.3.11-2+deb12u1
-libodbcinst2=2.3.11-2+deb12u1
-gdal-bin=3.6.2+dfsg-1+b2
-libgdal-dev=3.6.2+dfsg-1+b2
-libspatialindex-dev=1.9.3-3
+unixodbc-common
+libodbc2
+libodbcinst2
+gdal-bin
+libgdal-dev
+libspatialindex-dev
