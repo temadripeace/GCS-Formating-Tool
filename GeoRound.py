@@ -5,8 +5,7 @@ import geopandas as gpd
 from shapely import wkt
 from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 from io import BytesIO
-import subprocess
-from osgeo import gdal
+
 
 col1, col2, col3 = st.columns([1, 3, 1])  # Left, Center, Right columns
 with col2:
@@ -240,6 +239,7 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error loading file: {e}")
+
 
 
 
