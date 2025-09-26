@@ -8,3 +8,4 @@ fiona
 pyproj 
 rtree 
 matplotlib
+pygdal==3.6.2.*
