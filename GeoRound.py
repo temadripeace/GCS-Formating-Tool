@@ -1,12 +1,15 @@
 import streamlit as st
+import os
 import pandas as pd
 import geopandas as gpd
-import os
 from shapely import wkt
 from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 from io import BytesIO
-import pkg_resources
-installed_packages = [p.key for p in pkg_resources.working_set]
+
+
+import subprocess
+import streamlit as st
+st.text("System GDAL version: " + subprocess.getoutput("gdalinfo --version"))
 
 
 
@@ -242,5 +245,6 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error loading file: {e}")
+
 
 
