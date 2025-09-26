@@ -6,13 +6,6 @@ from shapely import wkt
 from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 from io import BytesIO
 
-
-import subprocess
-import streamlit as st
-st.text("System GDAL version: " + subprocess.getoutput("gdalinfo --version"))
-
-
-
 col1, col2, col3 = st.columns([1, 3, 1])  # Left, Center, Right columns
 with col2:
     st.image("Sucafina Logo.jpg", width=500)
@@ -245,6 +238,7 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error loading file: {e}")
+
 
 
 
